@@ -48,12 +48,12 @@ The starting board configuration looks like the following:
 
 ## Rationale
 
-The communication is designed to allow stateless engines. In other words,
-the engine should not have to save any data between successive `go`
-messages.  All data that is needed to evaluate a position is sent in the
-`position` message. This helps with keeping the engine synchronized. If
-the engine chooses to keep internal state these messages can be used to
-detect mismatches between the engine and the UI.
+The communication protocol is designed to allow stateless engines. In
+other words, the engine should not have to save any data between
+successive `go` messages.  All data that is needed to evaluate a position
+is sent in the `position` message. This helps with keeping the engine
+synchronized. If the engine chooses to keep internal state these messages
+can be used to detect mismatches between the engine and the UI.
 
 ## Rules
 
@@ -72,7 +72,7 @@ of the engine, but no search can take place.
       in this document. This is required to be the first message sent from
       the UI to the engine and the engine needs to respond with `id` messages
       followed by `reversi_v1_ok`.
-- `newgame (b|w)`
+- `newgame b|w`
     - Initialize a new game in the engine. `position` and `go` commands
       sent after this should be assumed to belong to the same game. `b`
       or `w` gives the color that this engine is playing this game.
@@ -82,7 +82,7 @@ of the engine, but no search can take place.
       `newgame` or `position` to give the engine time to initialize fully
       before continuing.
 - `position startpos moves...`
-    - Load up the position for searching. `startpos` corresponds to the
+    - Load the position for searching. `startpos` corresponds to the
       following squares being filled: `d4b e4w d5w e5b`. `moves...`
       is a list of moves describing the additional moves that have been
       played since the start of the game. Note that at the start of the
