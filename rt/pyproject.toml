@@ -7,9 +7,7 @@ readme = "README.md"
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.10,<3.13"
-numpy = "^1.26.1"
-
+python = "^3.10"
 
 [tool.poetry.group.dev.dependencies]
 python-lsp-server = {extras = ["all"], version = "^1.9.0"}
