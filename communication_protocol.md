@@ -3,9 +3,10 @@
 The communication protocol is loosely based on the Universal Chess Interface
 (UCI).
 
-All communication between the engine and the UI should be ended with a
-single newline character `\n`. Newlines inside a message is not allowed,
-but other arbitrary whitespace between fields is:
+All communication between the engine and the UI happens through the
+engine's stdin and stdout. Every message should be ended with a single
+newline character `\n`. Newlines inside a message is not allowed, but
+other arbitrary whitespace between fields is:
 
 Valid message:
 ```
