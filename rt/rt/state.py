@@ -263,7 +263,7 @@ class GameState:
             return None
         elif move not in self.possible_moves(player):
             return None
-        elif is_occupied(move.row, move.col, self.black_board) or is_occupied(move.row, move.col, self.white_board):  # noqa: E501
+        elif is_occupied(move.row, move.col, self.black_board) or is_occupied(move.row, move.col, self.white_board):
             return None
 
         new_state = GameState(self.black_board, self.white_board, player)
@@ -293,7 +293,7 @@ class GameState:
 """
 
     def __repr__(self):
-        return f"GameState(black_board={self.black_board}, white_board={self.white_board}, last_played={self.last_played})"  # noqa: E501
+        return f"GameState(black_board={self.black_board}, white_board={self.white_board}, last_played={self.last_played})"
 
 
 if __name__ == "__main__":
