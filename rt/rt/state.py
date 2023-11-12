@@ -27,8 +27,7 @@ def is_inbounds(row, col):
     Returns:
         True if the position is a valid position on the board, False otherwise.
     """
-    ind = rc2ind(row, col)
-    return ind >= 0 and ind <= BOARD_SIZE * BOARD_SIZE
+    return row >= 0 and row < BOARD_SIZE and col >= 0 and col < BOARD_SIZE
 
 
 def rc2ind(row, col):
