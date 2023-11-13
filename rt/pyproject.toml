@@ -12,6 +12,10 @@ python = "^3.10"
 [tool.poetry.group.dev.dependencies]
 python-lsp-server = {extras = ["all"], version = "^1.9.0"}
 
+[tool.poetry.scripts]
+rt-server = "rt.server:main"
+rt-example-engine = "rt.engine:run"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
