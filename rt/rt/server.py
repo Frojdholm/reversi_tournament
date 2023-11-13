@@ -135,6 +135,7 @@ def play_game(pb, pw):
 
         # The player made an illegal move so the opponent wins
         if bestmove is None:
+            logger.info("illegal move by %s", next_player)
             return next_player.opponent()
 
         moves.append(str(bestmove))
