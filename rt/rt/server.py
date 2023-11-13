@@ -2,8 +2,13 @@ import argparse
 import subprocess
 import shlex
 import shutil
+import os
+import logging
 
 from rt.state import Player, GameState
+
+
+logger = logging.getLogger(__name__)
 
 
 def popen(cmd):
@@ -21,7 +26,8 @@ class PlayerError(Exception):
 
 
 class PlayerProcess:
-    def __init__(self, cmd):
+    def __init__(self, tag, cmd):
+        self.tag = tag
         self.cmd = shutil.which(cmd)
         self.name = None
         self.author = None
@@ -42,11 +48,13 @@ class PlayerProcess:
 
     def _write(self, msg):
         msg = msg.strip()
+        logger.debug("send to %s: %s", self.tag, msg)
         self.process.stdin.write(msg + "\n")
 
     def _read(self):
-        msg = self.process.stdout.readline()
-        return msg.strip()
+        msg = self.process.stdout.readline().strip()
+        logger.debug("recv from %s: %s", self.tag, msg)
+        return msg
 
     def expect_enter(self):
         if self.process is None:
@@ -140,19 +148,21 @@ def run_server(player1, player2):
     wins_p1 = 0
     wins_p2 = 0
     draws = 0
-    with PlayerProcess(player1) as p1, PlayerProcess(player2) as p2:
+    with PlayerProcess("p1", player1) as p1, PlayerProcess("p2", player2) as p2:
         p1.start()
         p2.start()
         print(p1, "vs", p2)
-        for _ in range(iterations // 2):
+        for i in range(iterations // 2):
             winner = play_game(p1, p2)
+            logger.info("game %d, winner %s", i, winner)
             if winner == Player.Black:
                 wins_p1 += 1
             elif winner == Player.White:
                 wins_p2 += 1
             else:
                 draws += 1
-        for _ in range(iterations // 2):
+        for i in range(iterations // 2, iterations):
+            logger.info("game %d, winner %s", i, winner)
             winner = play_game(p2, p1)
             if winner == Player.Black:
                 wins_p2 += 1
@@ -170,4 +180,6 @@ def main():
     parser.add_argument("player2")
 
     args = parser.parse_args()
+
+    logging.basicConfig(filename=f"server{os.getpid()}.log")
     run_server(args.player1, args.player2)
