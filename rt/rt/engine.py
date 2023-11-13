@@ -1,9 +1,14 @@
 import sys
 import random
+import logging
+import os
 from abc import ABC, abstractmethod
 from enum import Enum, auto
 
 from rt.state import GameState, Move, Player
+
+
+logger = logging.getLogger(__name__)
 
 
 class Agent(ABC):
@@ -85,15 +90,18 @@ class Engine:
         self.author = "<author>"
         self.game_state = None
         self.agent = None
+        logger.info("creating engine: %s by %s", self.name, self.author)
 
     def run(self):
         for msg in self.instream:
+            msg = msg.strip()
+            logger.debug("recv: %s", msg)
             try:
                 self.parse(msg)
                 # Flush to ensure the message is sent to the UI.
                 self.outstream.flush()
             except EngineError as err:
-                print(err, file=sys.stderr)
+                logger.error("error: %s", err)
 
     def parse(self, msg):
         """Parse a message from the UI.
@@ -107,7 +115,6 @@ class Engine:
         Raises:
             EngineError: If the message was unexpected or wrong.
         """
-        msg = msg.strip()
         command, *args = msg.split()
 
         # The newgame command is allowed any time after the engine has
@@ -181,14 +188,17 @@ class Engine:
             move = Move.from_str(m, state)
             state = state.make_move(move)
 
+        logger.debug("parsed position: %r", state)
         self.agent.set_state(state)
 
     def respond(self, msg):
         # Strip to ensure only a single newline is written
         msg = msg.strip()
+        logger.debug("send: %s", msg)
         self.outstream.write(msg + "\n")
 
 
 def run():
+    logging.basicConfig(filename=f"engine{os.getpid()}.log")
     engine = Engine(RandomAgent, instream=sys.stdin, outstream=sys.stdout)
     engine.run()
