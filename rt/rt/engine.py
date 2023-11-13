@@ -1,5 +1,4 @@
 import sys
-import fileinput
 import random
 from abc import ABC, abstractmethod
 from enum import Enum, auto
@@ -68,15 +67,19 @@ class Engine:
         AwaitingGo = auto()
         """The engine is ready to search and is awaiting the "go" command."""
 
-    def __init__(self, agent_factory):
+    def __init__(self, agent_factory, instream, outstream):
         """Create a new Engine.
 
         Args:
             agent_factory: A callable that when called with "b" or "w" will
                            create a new agent ready to play as black or white
                            respectively.
+            instream: The file-like object to get input from.
+            outstream: The file-like object to send output to.
         """
         self.agent_factory = agent_factory
+        self.instream = instream
+        self.outstream = outstream
         self.state = Engine.State.Uninitialized
         self.name = "TESTENGINE 1.0"
         self.author = "<author>"
@@ -84,11 +87,11 @@ class Engine:
         self.agent = None
 
     def run(self):
-        for msg in fileinput.input(encoding="utf-8"):
+        for msg in self.instream:
             try:
                 self.parse(msg)
                 # Flush to ensure the message is sent to the UI.
-                sys.stdout.flush()
+                self.outstream.flush()
             except EngineError as err:
                 print(err, file=sys.stderr)
 
@@ -144,9 +147,9 @@ class Engine:
                 self.state = Engine.State.AwaitingPosition
 
     def send_id(self):
-        Engine.respond(f"id name {self.name}")
-        Engine.respond(f"id author {self.author}")
-        Engine.respond("reversi_v1_ok")
+        self.respond(f"id name {self.name}")
+        self.respond(f"id author {self.author}")
+        self.respond("reversi_v1_ok")
 
     def setup_agent(self, args):
         if len(args) != 1:
@@ -165,10 +168,10 @@ class Engine:
             kwargs[key] = int(value)
         # TODO: Make this robust in case an argument is wrong
         move = self.agent.search(**kwargs)
-        Engine.respond(f"bestmove {move}")
+        self.respond(f"bestmove {move}")
 
     def send_ready_ok(self):
-        Engine.respond("readyok")
+        self.respond("readyok")
 
     def parse_position(self, moves):
         expect("startpos", moves[0])
@@ -180,13 +183,12 @@ class Engine:
 
         self.agent.set_state(state)
 
-    @staticmethod
-    def respond(msg):
+    def respond(self, msg):
         # Strip to ensure only a single newline is written
         msg = msg.strip()
-        sys.stdout.write(msg + "\n")
+        self.outstream.write(msg + "\n")
 
 
 def run():
-    engine = Engine(RandomAgent)
+    engine = Engine(RandomAgent, instream=sys.stdin, outstream=sys.stdout)
     engine.run()
