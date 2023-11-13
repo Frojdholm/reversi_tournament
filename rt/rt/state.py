@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from functools import lru_cache
 
 
 BOARD_SIZE = 8
@@ -9,8 +10,8 @@ def is_occupied(row, col, board):
     """Checks if the position is occupied on the board.
 
     Args:
-        - ind: The position on the board in index format.
-        - board: The board to check.
+        ind: The position on the board in index format.
+        board: The board to check.
 
     Returns:
         True if the position is occupied, False otherwise.
@@ -22,7 +23,7 @@ def is_inbounds(row, col):
     """Checks if the position is on the board.
 
     Args:
-        - ind: The position in index format.
+        ind: The position in index format.
 
     Returns:
         True if the position is a valid position on the board, False otherwise.
@@ -34,8 +35,8 @@ def rc2ind(row, col):
     """Convert a position from RC (row, col) format to index format.
 
     Args:
-        - row: The row index (0-based).
-        - col: The column index (0-based).
+        row: The row index (0-based).
+        col: The column index (0-based).
 
     Returns:
         The position in index format.
@@ -49,8 +50,8 @@ def rc2board(row, col):
     Board format is an integer where the bits represent occupied places.
 
     Args:
-        - row: The row index (0-based).
-        - col: The column index (0-based).
+        row: The row index (0-based).
+        col: The column index (0-based).
 
     Returns:
         The position in board format.
@@ -64,7 +65,7 @@ def ind2board(ind):
     Board format is an integer where the bits represent occupied places.
 
     Args:
-        - ind: The position in index format.
+        ind: The position in index format.
 
     Returns:
         The position in board format.
@@ -116,7 +117,7 @@ def find_flips(row, col, my_board, opponent_board):
     )
 
 
-def find_moves(my_board, opponent_board):
+def find_moves(player, my_board, opponent_board):
     moves = []
     for row, col in iter_board():
         # A move is only valid if the position is unoccupied
@@ -124,25 +125,52 @@ def find_moves(my_board, opponent_board):
             flip_board = find_flips(row, col, my_board, opponent_board)
             # A move is only valid if it flips at least one token
             if flip_board != 0:
-                moves.append(Move(row, col, flip_board))
+                moves.append(Move(row, col, flip_board, player))
     return moves
-
-
-def single_board_to_string(board):
-    res = [" abcdefgh"]
-    for row in range(BOARD_SIZE):
-        r = [str(row + 1)]
-        for col in range(BOARD_SIZE):
-            if is_occupied(row, col, board):
-                r.append("X")
-            else:
-                r.append(".")
-        res.append("".join(r))
-    return "\n".join(res)
 
 
 def col_to_string(col):
     return chr(col + ord("a"))
+
+
+def parse_move_string(move):
+    """Parse the string representation of a move.
+
+    The string representation of a move is "column-row-player" where the column
+    is given as a letter a-h and the row as an index (1-based) and player is
+    either "b" or "w".
+
+    Some examples of valid string representations are: a3b, h8w and g4b.
+
+    While the string representation can be a valid move, it is not guaranteed
+    that the move is playable. For a move to be playable the move has to flip
+    at least one of the opponents tokens which depends on the current state of
+    the game.
+
+    Args:
+        move: The string representation of a move.
+
+    Returns:
+        A tuple containing the row-index (0-based), column-index (0-based) and
+        the Player.
+    """
+    if len(move) != 3:
+        raise ValueError(f"invalid move: {move}")
+
+    col, row, player = move.lower()
+    col = ord(col) - ord("a")
+    row = int(row) - 1
+
+    if not is_inbounds(row, col) or (player != "b" and player != "w"):
+        raise ValueError(f"invalid move: {move}")
+
+    player = Player.Black if player == "b" else Player.White
+    return row, col, player
+
+
+class Player(Enum):
+    Black = "b"
+    White = "w"
 
 
 @dataclass
@@ -150,22 +178,20 @@ class Move:
     row: int
     col: int
     flip_board: int
+    player: Player
+
+    @staticmethod
+    def from_str(move, state):
+        row, col, player = parse_move_string(move)
+        match player:
+            case Player.Black:
+                flip_board = find_flips(row, col, state.black_board, state.white_board)
+            case Player.White:
+                flip_board = find_flips(row, col, state.white_board, state.black_board)
+        return Move(row, col, flip_board, player)
 
     def __str__(self):
-        return f"""{col_to_string(self.col)}{self.row + 1}
-{single_board_to_string(self.flip_board)}
-"""
-
-
-class Player(Enum):
-    Black = "B"
-    White = "W"
-
-    def opponent(self):
-        if self == Player.Black:
-            return Player.White
-        else:
-            return Player.Black
+        return f"{col_to_string(self.col)}{self.row + 1}{self.player.value}"
 
 
 class GameState:
@@ -175,8 +201,9 @@ class GameState:
         """Intialize an empty game state.
 
         Note:
-            This state is not a valid game state and needs to be further
-            initialized. Consider using `GameState.start_position()` instead.
+            This state is likely not a valid game state and needs to be further
+            initialized. Consider using `GameState.start_position()` instead and
+            playing moves.
         """
         self.black_board = black_board
         self.white_board = white_board
@@ -194,18 +221,12 @@ class GameState:
         """Return a list of possible moves for the given player.
 
         Args:
-            - player: The player to find moves for.
+            player: The player to find moves for.
 
         Returns:
             A list of moves for the given player at the current GameState.
         """
-        match player:
-            case Player.Black:
-                return find_moves(self.black_board, self.white_board)
-            case Player.White:
-                return find_moves(self.white_board, self.black_board)
-            case _:
-                raise ValueError(f"invalid player {player}")
+        return possible_moves(self, player)
 
     def _place_token(self, row, col, player):
         """Place a token on the board.
@@ -219,58 +240,53 @@ class GameState:
                 self.black_board |= pattern
             case Player.White:
                 self.white_board |= pattern
-            case _:
-                raise ValueError(f"invalid player {player}")
 
-    def _next_player(self):
+    def next_player(self):
         """Return the next player or None if the game is over."""
-        # TODO: You don't have to get both possible moves most of the time
-        black_moves = self.possible_moves(Player.Black)
-        white_moves = self.possible_moves(Player.White)
         match self.last_played:
             case Player.Black:
-                if len(white_moves) > 0:
+                if len(self.possible_moves(Player.White)) > 0:
                     return Player.White
-                elif len(black_moves) > 0:
+                elif len(self.possible_moves(Player.Black)) > 0:
                     return Player.Black
                 else:
                     return None
             case Player.White:
-                if len(black_moves) > 0:
+                if len(self.possible_moves(Player.Black)) > 0:
                     return Player.Black
-                elif len(white_moves) > 0:
+                elif len(self.possible_moves(Player.White)) > 0:
                     return Player.White
                 else:
                     return None
-            case _:
-                raise ValueError(f"invalid player {self.last_played}")
 
-    def make_move(self, player, move):
+    def make_move(self, move):
         """Make a move from the given GameState.
 
         Args:
-            - player: The player that is making the move.
-            - move: The move about to be played.
+            move: The move about to be played. Note that move is assumed to be
+                  playable. Use `GameState.possible_moves` and `GameState.next_player`
+                  to determine if a move is possible before calling this function.
 
         Returns:
-            A new state where the given move has been played or None if the
-            move is not legal.
+            A new state where the given move has been played.
         """
-        # TODO: This feels pretty inefficient when trying to figure out if a
-        # valid move is about to be played.
-        if player != self._next_player():
-            return None
-        elif move not in self.possible_moves(player):
-            return None
-        elif is_occupied(move.row, move.col, self.black_board) or is_occupied(move.row, move.col, self.white_board):
-            return None
-
-        new_state = GameState(self.black_board, self.white_board, player)
-        new_state._place_token(move.row, move.col, player)
+        # TODO: Add optional assertions here to check that move is actually valid
+        new_state = GameState(self.black_board, self.white_board, move.player)
+        new_state._place_token(move.row, move.col, move.player)
         new_state.black_board ^= move.flip_board
         new_state.white_board ^= move.flip_board
 
         return new_state
+
+    def winner(self):
+        b = bin(self.black_board).count("1")
+        w = bin(self.white_board).count("1")
+        if b > w:
+            return Player.Black
+        elif w > b:
+            return Player.White
+        else:
+            return None
 
     def _board_to_string(self):
         res = [" abcdefgh"]
@@ -287,7 +303,7 @@ class GameState:
         return "\n".join(res)
 
     def __str__(self):
-        return f"""Next player: {self._next_player()}
+        return f"""Next player: {self.next_player()}
 {self._board_to_string()}
 """
 
@@ -295,8 +311,10 @@ class GameState:
         return f"GameState(black_board={self.black_board}, white_board={self.white_board}, last_played={self.last_played})"
 
 
-if __name__ == "__main__":
-    state = GameState().start_position()
-    moves = state.possible_moves(Player.Black)
-    state = state.make_move(Player.Black, moves[0])
-    print(state)
+@lru_cache
+def possible_moves(state, player):
+    match player:
+        case Player.Black:
+            return find_moves(player, state.black_board, state.white_board)
+        case Player.White:
+            return find_moves(player, state.white_board, state.black_board)
