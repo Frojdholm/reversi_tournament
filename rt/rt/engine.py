@@ -83,6 +83,15 @@ class Engine:
         self.game_state = None
         self.agent = None
 
+    def run(self):
+        for msg in fileinput.input(encoding="utf-8"):
+            try:
+                self.parse(msg)
+                # Flush to ensure the message is sent to the UI.
+                sys.stdout.flush()
+            except EngineError as err:
+                print(err, file=sys.stderr)
+
     def parse(self, msg):
         """Parse a message from the UI.
 
@@ -180,10 +189,4 @@ class Engine:
 
 def run():
     engine = Engine(RandomAgent)
-    for msg in fileinput.input(encoding="utf-8"):
-        try:
-            engine.parse(msg)
-            # Flush to ensure the message is sent to the UI.
-            sys.stdout.flush()
-        except EngineError as err:
-            print(err, file=sys.stderr)
+    engine.run()
