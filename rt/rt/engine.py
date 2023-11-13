@@ -162,7 +162,8 @@ class Engine:
         if len(args) != 1:
             raise EngineError(f"invalid newgame args: {args}")
         p = args[0].lower()
-        assert p == "b" or p == "w"
+        if p not in ("b", "w"):
+            raise EngineError(f"invalid newgame args: {args}")
         player = Player.Black if p == "b" else Player.White
         self.agent = self.agent_factory(player)
 
