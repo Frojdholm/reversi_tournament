@@ -172,6 +172,13 @@ class Player(Enum):
     Black = "b"
     White = "w"
 
+    def opponent(self):
+        match self:
+            case Player.Black:
+                return Player.White
+            case Player.White:
+                return Player.Black
+
 
 @dataclass
 class Move:
