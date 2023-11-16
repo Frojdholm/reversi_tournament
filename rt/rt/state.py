@@ -286,14 +286,21 @@ class GameState:
         return new_state
 
     def winner(self):
-        b = bin(self.black_board).count("1")
-        w = bin(self.white_board).count("1")
+        b = self.count(Player.Black)
+        w = self.count(Player.White)
         if b > w:
             return Player.Black
         elif w > b:
             return Player.White
         else:
             return None
+
+    def count(self, player):
+        match player:
+            case Player.Black:
+                return bin(self.black_board).count("1")
+            case Player.White:
+                return bin(self.white_board).count("1")
 
     def _board_to_string(self):
         res = [" abcdefgh"]
