@@ -15,6 +15,7 @@ python-lsp-server = {extras = ["all"], version = "^1.9.0"}
 [tool.poetry.scripts]
 rt-server = "rt.server:main"
 rt-example-engine = "rt.engine:run"
+rt-arena = "rt.arena:main"
 
 [build-system]
 requires = ["poetry-core"]
