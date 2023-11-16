@@ -1,7 +1,7 @@
 import sys
 
-from engine import RandomAgent
-from state import GameState, Player
+from rt.engine import RandomAgent
+from rt.state import GameState, Player
 
 
 def get_move(agent, player, state):
