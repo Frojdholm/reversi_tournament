@@ -1,6 +1,6 @@
 import sys
 
-from rt.engine import RandomAgent
+from rt.agent import RandomAgent
 from rt.state import GameState, Player
 
 
