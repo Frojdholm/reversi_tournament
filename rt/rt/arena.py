@@ -41,3 +41,7 @@ def main():
         state = state.make_move(bestmove)
     winner = state.winner()
     print("winner", winner)
+
+
+if __name__ == "__main__":
+    main()
