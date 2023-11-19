@@ -1,6 +1,6 @@
 import sys
 
-from rt.agent import RandomAgent
+from rt.agent import RandomAgent, SimpleAgent
 from rt.state import GameState, Player
 
 
@@ -22,7 +22,7 @@ def get_move(agent, player, state):
 
 
 def main():
-    player1 = RandomAgent(Player.Black)
+    player1 = SimpleAgent(Player.Black)
     player2 = RandomAgent(Player.White)
 
     winner = None
