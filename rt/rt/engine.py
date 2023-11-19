@@ -1,6 +1,5 @@
 import sys
 import logging
-import os
 from enum import Enum, auto
 
 from rt.state import GameState, Move, Player
@@ -171,6 +170,13 @@ class Engine:
 
 
 def run():
-    logging.basicConfig(filename=f"engine{os.getpid()}.log")
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("player")
+
+    args = parser.parse_args()
+
+    logging.basicConfig(filename=f"engine{args.player}.log", level=logging.DEBUG)
     engine = Engine(RandomAgent, instream=sys.stdin, outstream=sys.stdout)
     engine.run()

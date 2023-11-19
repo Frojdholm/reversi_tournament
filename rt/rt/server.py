@@ -2,7 +2,6 @@ import argparse
 import subprocess
 import shlex
 import shutil
-import os
 import logging
 
 from rt.state import Player, GameState
@@ -11,9 +10,16 @@ from rt.state import Player, GameState
 logger = logging.getLogger(__name__)
 
 
-def popen(cmd):
+def popen(cmd, tag):
+    cmd = shlex.split(cmd)
+    if len(cmd) == 0:
+        raise ValueError(f"invalid command {cmd}")
+    cmd[0] = shutil.which(cmd[0])
+    if any(cmd) == 0:
+        raise ValueError(f"invalid command {cmd}")
+    cmd.append(tag)
     return subprocess.Popen(
-        shlex.split(cmd),
+        cmd,
         bufsize=1,  # line buffered
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
@@ -28,13 +34,13 @@ class PlayerError(Exception):
 class PlayerProcess:
     def __init__(self, tag, cmd):
         self.tag = tag
-        self.cmd = shutil.which(cmd)
+        self.cmd = cmd
         self.name = None
         self.author = None
         self.process = None
 
     def __enter__(self):
-        self.process = popen(self.cmd)
+        self.process = popen(self.cmd, self.tag)
         return self
 
     def __exit__(self, *args):
@@ -182,5 +188,5 @@ def main():
 
     args = parser.parse_args()
 
-    logging.basicConfig(filename=f"server{os.getpid()}.log")
+    logging.basicConfig(filename="server.log", level=logging.DEBUG)
     run_server(args.player1, args.player2)
