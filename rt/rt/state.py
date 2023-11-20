@@ -113,6 +113,7 @@ def find_flips(row, col, my_board, opponent_board):
         | find_flips_along_direction(row, col, -1, 0, my_board, opponent_board)
         | find_flips_along_direction(row, col, -1, -1, my_board, opponent_board)
         | find_flips_along_direction(row, col, 1, -1, my_board, opponent_board)
+        | find_flips_along_direction(row, col, -1, 1, my_board, opponent_board)
         | find_flips_along_direction(row, col, 1, 1, my_board, opponent_board)
     )
 
