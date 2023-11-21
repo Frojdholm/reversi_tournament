@@ -221,8 +221,8 @@ class GameState:
     def start_position():
         """Return a GameState in the starting position."""
         state = GameState()
-        state.black_board = rc2board(3, 3) | rc2board(4, 4)
-        state.white_board = rc2board(3, 4) | rc2board(4, 3)
+        state.black_board = rc2board(3, 4) | rc2board(4, 3)
+        state.white_board = rc2board(3, 3) | rc2board(4, 4)
         return state
 
     def possible_moves(self, player):

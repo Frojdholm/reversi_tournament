@@ -8,8 +8,8 @@ The game is played on an 8x8 board where the players (B and W) start in the foll
 1
 2
 3
-4      B W
-5      W B
+4      W B
+5      B W
 6
 7
 8
@@ -36,15 +36,15 @@ and diagonally:
 7x     x     x
 8      x       x
 ```
-For example if, from the starting position, player B chooses to play e3
-the W token on e4 should be flipped.
+For example if, from the starting position, player B chooses to play d3
+the W token on d4 should be flipped.
 ```
  a b c d e f g h
 1
 2
-3        b
-4      B X
-5      W B
+3      b
+4      X B
+5      B W
 6
 7
 8

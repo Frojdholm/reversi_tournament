@@ -40,8 +40,8 @@ The starting board configuration looks like the following:
 1
 2
 3
-4      B W
-5      W B
+4      W B
+5      B W
 6
 7
 8
