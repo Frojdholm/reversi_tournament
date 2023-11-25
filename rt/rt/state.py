@@ -43,6 +43,20 @@ def rc2ind(row, col):
     """
     return row * BOARD_SIZE + col
 
+def ind2rc(ind):
+    """Convert a position from index format to RC (row, col) format.
+
+    Args:
+        ind: The position in index format.
+
+    Returns:
+        row: The row index (0-based).
+        col: The column index (0-based).
+    """
+    row = ind // BOARD_SIZE
+    col = ind % BOARD_SIZE
+    return row, col
+
 
 def rc2board(row, col):
     """Convert a position from RC (row, col) format to board format.
